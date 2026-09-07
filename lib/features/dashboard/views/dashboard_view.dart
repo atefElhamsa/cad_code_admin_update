@@ -8,6 +8,7 @@ import '../widgets/dashboard_sidebar.dart';
 import '../widgets/dashboard_header.dart';
 import '../widgets/dashboard_overview.dart';
 import '../widgets/placeholder_screen.dart';
+import '../../updater/services/updater_service.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
@@ -21,8 +22,21 @@ class DashboardView extends StatelessWidget {
   }
 }
 
-class DashboardContent extends StatelessWidget {
+class DashboardContent extends StatefulWidget {
   const DashboardContent({super.key});
+
+  @override
+  State<DashboardContent> createState() => _DashboardContentState();
+}
+
+class _DashboardContentState extends State<DashboardContent> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      UpdaterService.checkForUpdate(context);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

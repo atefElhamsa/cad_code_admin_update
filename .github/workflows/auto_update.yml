@@ -1,0 +1,165 @@
+name: Auto Update Build (Dev)
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Auto-increment Version
+        shell: pwsh
+        run: |
+          $pubspec = Get-Content "pubspec.yaml" -Raw
+          $match = [regex]::Match($pubspec, '(?m)^version:\s*(\d+\.\d+\.)(\d+)\+(\d+)\s*$')
+          if ($match.Success) {
+            $prefix = $match.Groups[1].Value
+            $oldBuild = [int]$match.Groups[3].Value
+            $newBuild = $oldBuild + 1
+            
+            $newVersion = "version: ${prefix}${newBuild}+${newBuild}"
+            $pubspec = $pubspec -replace '(?m)^version:\s*\d+\.\d+\.\d+\+\d+\s*$', $newVersion
+            Set-Content -Path "pubspec.yaml" -Value $pubspec
+            
+            git config user.name "github-actions"
+            git config user.email "actions@github.com"
+            git add pubspec.yaml
+            git commit -m "chore: auto-increment version to ${prefix}${newBuild}+${newBuild} [skip ci]"
+            git push origin HEAD:${{ github.ref }}
+            Write-Host "Version bumped to ${prefix}${newBuild}+${newBuild} and pushed back to repo."
+          } else {
+            Write-Host "Failed to parse version from pubspec.yaml!"
+          }
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.7'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Windows Release
+        run: flutter build windows --release
+
+      - name: Get version from pubspec
+        id: get_version
+        shell: pwsh
+        run: |
+          $pubspec = Get-Content "pubspec.yaml" -Raw
+          $fullVersion = [regex]::Match($pubspec, 'version:\s+(\S+)').Groups[1].Value
+          $version = ($fullVersion -split '\+')[0]
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+
+      - name: Build Installer and Zip
+        shell: pwsh
+        run: |
+          if (Test-Path "build/windows/x64/runner/Release") {
+            # 1. عمل ملف Zip 
+            cd build/windows/x64/runner/Release
+            tar -a -c -f ../../../../../build/cad_code_admin_release.zip *
+            Write-Host "Release zipped using tar ✅"
+            cd ../../../../..
+
+            # 2. تعديل رقم الإصدار في ملف الانستولر
+            $issPath = "windows/runner/installer.iss"
+            if (Test-Path $issPath) {
+              $issContent = Get-Content $issPath
+              $issContent = $issContent -replace 'AppVersion=.*', "AppVersion=${{ steps.get_version.outputs.version }}"
+              Set-Content -Path $issPath -Value $issContent
+
+              # 3. تشغيل Inno Setup 
+              iscc "windows/runner/installer.iss" /O"${{ github.workspace }}\build"
+              Write-Host "Installer created successfully ✅"
+            } else {
+              Write-Host "installer.iss not found, skipping Inno Setup installer creation."
+            }
+          } else {
+            Write-Error "Release folder not found ❌"
+            exit 1
+          }
+
+      - name: Create version tag
+        shell: pwsh
+        run: |
+          $tag = "v${{ steps.get_version.outputs.version }}"
+          git tag -f $tag
+          $repoUrl = "https://${{ secrets.GH_RELEASE_PAT }}@github.com/atefElhamsa/cad_code_admin_update.git"
+          git config --local --unset-all http.https://github.com/.extraheader
+          git push $repoUrl refs/tags/$tag --force
+
+      - name: Create / Update Release
+        uses: softprops/action-gh-release@v1
+        with:
+          repository: atefElhamsa/cad_code_admin_update
+          tag_name: v${{ steps.get_version.outputs.version }}
+          name: Release v${{ steps.get_version.outputs.version }}
+          prerelease: false
+          files: |
+            build/cad_code_admin_setup.exe
+            build/cad_code_admin_release.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_RELEASE_PAT }}
+
+      - name: Update version.json on main
+        shell: pwsh
+        run: |
+          $repo = "https://${{ secrets.GH_RELEASE_PAT }}@github.com/atefElhamsa/cad_code_admin_update.git"
+          $folder = "updater_temp"
+
+          git config --global --unset-all http.https://github.com/.extraheader || Write-Host "No global extraheader"
+
+          git clone $repo $folder
+          cd $folder
+          git checkout main
+          git pull origin main --rebase || Write-Host "Could not pull"
+
+          $version = "${{ steps.get_version.outputs.version }}"
+
+          if (Test-Path version.json) {
+            $json = Get-Content version.json | ConvertFrom-Json
+          } else {
+            $json = @{ version=""; url="" }
+          }
+          $json.version = $version
+          $json.url = "https://github.com/atefElhamsa/cad_code_admin_update/releases/download/v$version/cad_code_admin_release.zip"
+          $json | ConvertTo-Json -Depth 10 | Set-Content version.json
+
+          $date = Get-Date -Format "r"
+          $xml = "<?xml version=`"1.0`" encoding=`"utf-8`"?>`n" +
+                 "<rss version=`"2.0`" xmlns:sparkle=`"http://www.andymatuschak.org/xml-namespaces/sparkle`">`n" +
+                 "    <channel>`n" +
+                 "        <title>C&C Academy Admin</title>`n" +
+                 "        <item>`n" +
+                 "            <title>Version $version</title>`n" +
+                 "            <description>New update is available.</description>`n" +
+                 "            <pubDate>$date</pubDate>`n" +
+                 "            <enclosure url=`"https://github.com/atefElhamsa/cad_code_admin_update/releases/download/v$version/cad_code_admin_setup.exe`"`n" +
+                 "                       sparkle:version=`"$version`"`n" +
+                 "                       sparkle:os=`"windows`"`n" +
+                 "                       type=`"application/octet-stream`" />`n" +
+                 "        </item>`n" +
+                 "    </channel>`n" +
+                 "</rss>"
+          $xml | Set-Content appcast.xml -Encoding UTF8
+
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add version.json appcast.xml
+          git commit -m "chore: update version to $version" || Write-Host "No changes"
+          git push origin main
