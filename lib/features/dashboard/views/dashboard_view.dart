@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubits/dashboard_cubit.dart';
 import '../../../shared/widgets/responsive_layout.dart';
 import '../../users/views/users_view.dart';
+import '../../courses/views/courses_view.dart';
 import '../widgets/dashboard_sidebar.dart';
 import '../widgets/dashboard_header.dart';
 import '../widgets/dashboard_overview.dart';
@@ -76,7 +77,7 @@ class _DashboardContentState extends State<DashboardContent> {
       case 1:
         return const UsersView();
       case 2:
-        return const PlaceholderScreen(title: 'Courses Management');
+        return const CoursesView();
       case 3:
         return const PlaceholderScreen(title: 'Settings');
       default:
