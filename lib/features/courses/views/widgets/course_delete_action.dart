@@ -39,7 +39,7 @@ class CourseDeleteAction extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () {
-                  coursesCubit.deleteCourse(course.id);
+                  coursesCubit.deleteCourse(course);
                   Navigator.pop(ctx);
                 },
                 style: ElevatedButton.styleFrom(
