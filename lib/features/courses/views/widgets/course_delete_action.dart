@@ -15,6 +15,7 @@ class CourseDeleteAction extends StatelessWidget {
     return IconButton(
       icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
       onPressed: () {
+        final coursesCubit = context.read<CoursesCubit>();
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
@@ -38,7 +39,7 @@ class CourseDeleteAction extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () {
-                  context.read<CoursesCubit>().deleteCourse(course.id);
+                  coursesCubit.deleteCourse(course.id);
                   Navigator.pop(ctx);
                 },
                 style: ElevatedButton.styleFrom(
