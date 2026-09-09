@@ -92,6 +92,18 @@ class CourseFoldersTable extends StatelessWidget {
                   ),
                 ),
               ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  'ACCESS CODE',
+                  style: TextStyle(
+                    color: AppTheme.textGray,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
               SizedBox(width: 48), // Actions
             ],
           ),

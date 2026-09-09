@@ -14,12 +14,28 @@ class UsersCubit extends Cubit<UsersState> {
   Future<void> fetchUsers() async {
     emit(UsersLoading());
     try {
-      // NOTE: This assumes a table named 'profiles' exists.
-      final response = await _supabase.from('profiles').select();
+      final profilesResponse = await _supabase.from('profiles').select();
+      
+      // Fetch unlocked folders mapped to user_id
+      final foldersResponse = await _supabase.from('user_unlocked_folders').select('''
+        user_id,
+        course_folders(title)
+      ''');
 
-      final users = (response as List)
-          .map((e) => UserProfile.fromJson(e))
-          .toList();
+      final Map<String, List<String>> userFoldersMap = {};
+      for (var row in foldersResponse as List) {
+        final userId = row['user_id'] as String;
+        final folderTitle = row['course_folders']?['title'] as String?;
+        if (folderTitle != null) {
+          userFoldersMap.putIfAbsent(userId, () => []).add(folderTitle);
+        }
+      }
+
+      final users = (profilesResponse as List).map((e) {
+        final userId = e['id'] as String;
+        e['unlocked_folders_injected'] = userFoldersMap[userId] ?? [];
+        return UserProfile.fromJson(e);
+      }).toList();
       emit(UsersLoaded(users));
     } catch (e) {
       emit(UsersError(e.toString()));

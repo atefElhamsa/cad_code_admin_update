@@ -14,7 +14,7 @@ void main() async {
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     await windowManager.ensureInitialized();
 
-    // Initialize Supabase (User needs to replace these placeholders)
+    // Initialize Supabase
     await Supabase.initialize(
       url: 'https://tjzhjlauvceycwmnumhf.supabase.co',
       // ignore: deprecated_member_use

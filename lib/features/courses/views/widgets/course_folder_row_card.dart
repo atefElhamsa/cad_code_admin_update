@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../models/course_folder_model.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../cubits/course_folders_cubit.dart';
+import 'access_code_widget.dart';
 
 class CourseFolderRowCard extends StatefulWidget {
   final CourseFolderModel folder;
@@ -109,6 +110,13 @@ class _CourseFolderRowCardState extends State<CourseFolderRowCard> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
+              ),
+            ),
+            Expanded(
+              flex: 3,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: AccessCodeWidget(folderId: widget.folder.id),
               ),
             ),
             SizedBox(
