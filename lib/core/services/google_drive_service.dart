@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
@@ -83,9 +82,16 @@ class GoogleDriveService {
   }
 
   Future<AuthClient> _getAuthClient() async {
-    final credentialsString = await rootBundle.loadString(
-      'assets/client_secret.json',
-    );
+    // Load client_secret.json from the directory next to the executable.
+    // In CI/installer builds the file is placed there alongside the .exe.
+    final exeDir = File(Platform.resolvedExecutable).parent.path;
+    final secretFile = File('$exeDir/client_secret.json');
+    if (!secretFile.existsSync()) {
+      throw Exception(
+        'client_secret.json not found next to the executable at $exeDir',
+      );
+    }
+    final credentialsString = await secretFile.readAsString();
     final json = jsonDecode(credentialsString);
     final installed = json['installed'] ?? json['web'];
     final clientId = ClientId(

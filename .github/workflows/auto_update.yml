@@ -51,8 +51,29 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Restore secret credentials
+        shell: pwsh
+        env:
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          GOOGLE_CLIENT_SECRET_JSON: ${{ secrets.GOOGLE_CLIENT_SECRET_JSON }}
+        run: |
+          $env:GOOGLE_CREDENTIALS_JSON | Set-Content -Path assets/credentials.json -Encoding UTF8
+          $env:GOOGLE_CLIENT_SECRET_JSON | Set-Content -Path assets/client_secret.json -Encoding UTF8
+          Write-Host "Secret files restored ✅"
+
       - name: Build Windows Release
         run: flutter build windows --release
+
+      - name: Copy credentials to Release folder
+        shell: pwsh
+        run: |
+          $releaseDir = "build/windows/x64/runner/Release"
+          Copy-Item -Path assets/credentials.json  -Destination $releaseDir -Force
+          Copy-Item -Path assets/client_secret.json -Destination $releaseDir -Force
+          Write-Host "Credentials copied to release folder ✅"
+          # Remove the restored files so they are never committed
+          Remove-Item assets/credentials.json  -Force
+          Remove-Item assets/client_secret.json -Force
 
       - name: Get version from pubspec
         id: get_version
