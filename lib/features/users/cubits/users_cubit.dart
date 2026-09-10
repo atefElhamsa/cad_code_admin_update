@@ -36,9 +36,10 @@ class UsersCubit extends Cubit<UsersState> {
         e['unlocked_folders_injected'] = userFoldersMap[userId] ?? [];
         return UserProfile.fromJson(e);
       }).toList();
-      emit(UsersLoaded(users));
+      
+      if (!isClosed) emit(UsersLoaded(users));
     } catch (e) {
-      emit(UsersError(e.toString()));
+      if (!isClosed) emit(UsersError(e.toString()));
     }
   }
 
