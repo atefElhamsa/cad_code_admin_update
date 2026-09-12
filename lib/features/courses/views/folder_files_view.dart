@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../models/course_folder_model.dart';
 import '../cubits/files_cubit.dart';
-import 'widgets/upload_dialogs.dart';
 import 'widgets/native_file_viewer_view.dart';
 
 class FolderFilesView extends StatelessWidget {
@@ -24,18 +23,6 @@ class _FolderFilesContent extends StatelessWidget {
 
   const _FolderFilesContent({required this.folder});
 
-  void _showUploadDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return BlocProvider.value(
-          value: context.read<FilesCubit>(),
-          child: UploadFileDialog(folderId: folder.id),
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,22 +44,19 @@ class _FolderFilesContent extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.refresh, color: AppTheme.textGray),
-                  tooltip: 'Refresh',
+                OutlinedButton.icon(
                   onPressed: () => context.read<FilesCubit>().fetchFiles(),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: () => _showUploadDialog(context),
-                  icon: const Icon(Icons.upload_file),
-                  label: const Text('Upload File'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryAccent,
-                    foregroundColor: Colors.white,
+                  icon: const Icon(Icons.refresh, size: 16),
+                  label: const Text('Refresh'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.textGray,
+                    side: BorderSide(color: Colors.grey.shade300),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 16,
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                 ),

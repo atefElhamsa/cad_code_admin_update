@@ -7,6 +7,8 @@ class SessionModel extends Equatable {
   final String? duration;
   final String driveUrl;
   final int? orderIndex;
+  /// The Google Drive folder ID that holds this session's video + files.
+  final String? driveFolderId;
   final DateTime? createdAt;
 
   const SessionModel({
@@ -16,6 +18,7 @@ class SessionModel extends Equatable {
     this.duration,
     required this.driveUrl,
     this.orderIndex,
+    this.driveFolderId,
     this.createdAt,
   });
 
@@ -27,6 +30,7 @@ class SessionModel extends Equatable {
       duration: json['duration'] as String?,
       driveUrl: json['drive_url'] as String,
       orderIndex: json['order_index'] as int?,
+      driveFolderId: json['drive_folder_id'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String).toLocal()
           : null,
@@ -40,6 +44,7 @@ class SessionModel extends Equatable {
       'duration': duration,
       'drive_url': driveUrl,
       'order_index': orderIndex,
+      'drive_folder_id': driveFolderId,
     };
   }
 
@@ -51,6 +56,7 @@ class SessionModel extends Equatable {
     duration,
     driveUrl,
     orderIndex,
+    driveFolderId,
     createdAt,
   ];
 }

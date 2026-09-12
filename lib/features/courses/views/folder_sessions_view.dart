@@ -6,7 +6,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../cubits/sessions_cubit.dart';
 import '../cubits/sessions_state.dart';
-import 'widgets/upload_session_dialog.dart';
 
 class FolderSessionsView extends StatelessWidget {
   final CourseFolderModel folder;
@@ -30,19 +29,6 @@ class _FolderSessionsContent extends StatelessWidget {
 
   const _FolderSessionsContent({required this.folder, required this.isTab});
 
-  void _showUploadDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        // Provide the same cubit to the dialog so it can trigger upload
-        return BlocProvider.value(
-          value: context.read<SessionsCubit>(),
-          child: UploadSessionDialog(folderId: folder.id),
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,9 +42,9 @@ class _FolderSessionsContent extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                if (!isTab) ...[
+            if (!isTab) ...[
+              Row(
+                children: [
                   IconButton(
                     icon: const Icon(
                       Icons.arrow_back,
@@ -76,7 +62,11 @@ class _FolderSessionsContent extends StatelessWidget {
                     ),
                   ),
                 ],
-                if (isTab) ...[
+              ),
+            ],
+            if (isTab) ...[
+              Row(
+                children: [
                   const Text(
                     'Session Videos',
                     style: TextStyle(
@@ -85,30 +75,27 @@ class _FolderSessionsContent extends StatelessWidget {
                       color: AppTheme.textDark,
                     ),
                   ),
-                ],
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.refresh, color: AppTheme.textGray),
-                  tooltip: 'Refresh',
-                  onPressed: () =>
-                      context.read<SessionsCubit>().fetchSessions(),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: () => _showUploadDialog(context),
-                  icon: const Icon(Icons.upload_file),
-                  label: const Text('Upload Video'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryAccent,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 16,
+                  const Spacer(),
+                  OutlinedButton.icon(
+                    onPressed: () =>
+                        context.read<SessionsCubit>().fetchSessions(),
+                    icon: const Icon(Icons.refresh, size: 16),
+                    label: const Text('Refresh'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.textGray,
+                      side: BorderSide(color: Colors.grey.shade300),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
             const SizedBox(height: 32),
             Expanded(
               child: BlocBuilder<SessionsCubit, SessionsState>(

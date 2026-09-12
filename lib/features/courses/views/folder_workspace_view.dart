@@ -6,6 +6,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../cubits/sessions_cubit.dart';
 import '../cubits/tasks_cubit.dart';
 import '../cubits/files_cubit.dart';
+import '../views/widgets/upload_session_dialog.dart';
 import 'folder_sessions_view.dart';
 import 'folder_tasks_view.dart';
 import 'folder_files_view.dart';
@@ -13,15 +14,34 @@ import 'folder_files_view.dart';
 class FolderWorkspaceView extends StatelessWidget {
   final CourseFolderModel folder;
 
-  const FolderWorkspaceView({super.key, required this.folder});
+  /// The name of the parent course — used to build the Drive folder hierarchy.
+  final String courseName;
+
+  const FolderWorkspaceView({
+    super.key,
+    required this.folder,
+    required this.courseName,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => SessionsCubit(folderId: folder.id)),
+        BlocProvider(
+          create: (context) => SessionsCubit(
+            folderId: folder.id,
+            courseName: courseName,
+            folderName: folder.title,
+          ),
+        ),
         BlocProvider(create: (context) => TasksCubit(folderId: folder.id)),
-        BlocProvider(create: (context) => FilesCubit(folderId: folder.id)),
+        BlocProvider(
+          create: (context) => FilesCubit(
+            folderId: folder.id,
+            courseName: courseName,
+            folderName: folder.title,
+          ),
+        ),
       ],
       child: DefaultTabController(
         length: 3,
@@ -60,6 +80,43 @@ class FolderWorkspaceView extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                             color: AppTheme.textDark,
                             letterSpacing: -0.5,
+                          ),
+                        ),
+                        const Spacer(),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (dialogContext) => MultiBlocProvider(
+                                providers: [
+                                  BlocProvider.value(
+                                    value: context.read<SessionsCubit>(),
+                                  ),
+                                  BlocProvider.value(
+                                    value: context.read<TasksCubit>(),
+                                  ),
+                                  BlocProvider.value(
+                                    value: context.read<FilesCubit>(),
+                                  ),
+                                ],
+                                child: UploadSessionDialog(folderId: folder.id),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.cloud_upload_outlined, size: 18),
+                          label: const Text('Upload Session'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryAccent,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 14,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
                       ],

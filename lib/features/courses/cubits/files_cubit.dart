@@ -9,10 +9,16 @@ import '../../../core/services/google_drive_service.dart';
 
 class FilesCubit extends Cubit<FilesState> {
   final int folderId;
+  final String courseName;
+  final String folderName;
   final _supabase = Supabase.instance.client;
   final _driveService = GoogleDriveService();
 
-  FilesCubit({required this.folderId}) : super(FilesInitial()) {
+  FilesCubit({
+    required this.folderId,
+    required this.courseName,
+    required this.folderName,
+  }) : super(FilesInitial()) {
     fetchFiles();
   }
 
@@ -37,10 +43,21 @@ class FilesCubit extends Cubit<FilesState> {
   Future<void> uploadFile(String filePath, String title) async {
     emit(FilesLoading());
     try {
-      // 1. Upload to Google Drive
-      final driveUrl = await _driveService.uploadFile(File(filePath), title);
+      // 1. Get or create folder hierarchy: Root → Course → Session Folder
+      final courseFolderId = await _driveService.getOrCreateFolder(courseName);
+      final sessionFolderId = await _driveService.getOrCreateFolder(
+        folderName,
+        parentFolderId: courseFolderId,
+      );
 
-      // 2. Save to Supabase
+      // 2. Upload file inside the session folder
+      final driveUrl = await _driveService.uploadFile(
+        File(filePath),
+        title,
+        driveFolderId: sessionFolderId,
+      );
+
+      // 3. Save to Supabase
       final newFile = {
         'folder_id': folderId,
         'title': title,

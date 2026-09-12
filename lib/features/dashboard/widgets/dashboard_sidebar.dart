@@ -1,132 +1,151 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../cubits/dashboard_cubit.dart';
+import 'nav_item.dart';
 
 class DashboardSidebar extends StatelessWidget {
   final int selectedIndex;
 
   const DashboardSidebar({super.key, required this.selectedIndex});
 
+  static const _itemColors = [
+    AppTheme.primaryAccent,
+    Color(0xFF0EA5E9),
+    Color(0xFF8B5CF6),
+    Color(0xFF10B981),
+  ];
+
+  static const _itemIcons = [
+    // Icons.dashboard_rounded,
+    Icons.people_alt_rounded,
+    Icons.auto_stories_rounded,
+    Icons.settings_rounded,
+  ];
+
+  static const _itemLabels = [
+    // 'Dashboard',
+    'Users',
+    'Courses',
+    'Settings',
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 250,
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceWhite,
+      width: 260,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 15,
-            offset: const Offset(4, 0),
+            color: Color(0x33000000),
+            blurRadius: 24,
+            offset: Offset(6, 0),
           ),
         ],
       ),
-      child: Material(
-        color: AppTheme.surfaceWhite,
-        child: ListView(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 32, 24, 48),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceWhite,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.primaryAccent.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+      child: Column(
+        children: [
+          // ── Logo area ──────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 36, 24, 40),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF818CF8), Color(0xFF4F46E5)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x554F46E5),
+                        blurRadius: 14,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      'assets/images/logo.jpg',
+                      height: 44,
+                      width: 44,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'C&C Academy',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: 0.2,
                         ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.asset(
-                        'assets/images/logo.jpg',
-                        height: 40,
-                        width: 40,
-                        fit: BoxFit.cover,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Text(
-                      'C&C Academy',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.textDark,
+                      SizedBox(height: 2),
+                      Text(
+                        'Admin Panel',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFFA5B4FC),
+                        ),
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            _buildNavItem(context, 0, Icons.dashboard, 'Dashboard'),
-            _buildNavItem(context, 1, Icons.people, 'Users'),
-            _buildNavItem(context, 2, Icons.book, 'Courses'),
-            _buildNavItem(context, 3, Icons.settings, 'Settings'),
-          ],
-        ),
-      ).animate().slideX(
-        begin: -1,
-        duration: 500.ms,
-        curve: Curves.easeOutCubic,
-      ),
-    );
-  }
-
-  Widget _buildNavItem(BuildContext context, int index, IconData icon, String title) {
-    final isSelected = index == selectedIndex;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryAccent : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppTheme.primaryAccent.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [],
-        ),
-        child: Material(
-          type: MaterialType.transparency,
-          child: ListTile(
-            leading: Icon(
-              icon,
-              color: isSelected ? AppTheme.surfaceWhite : AppTheme.textGray,
-            ),
-            title: Text(
-              title,
-              style: TextStyle(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                color: isSelected ? AppTheme.surfaceWhite : AppTheme.textGray,
-              ),
-            ),
-            selected: isSelected,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            onTap: () {
-              context.read<DashboardCubit>().changeTab(index);
-            },
           ),
-        ),
+
+          // ── Section label ───────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.only(left: 24, bottom: 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'MENU',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white.withOpacity(0.3),
+                  letterSpacing: 2,
+                ),
+              ),
+            ),
+          ),
+
+          // ── Nav items ───────────────────────────────────────────
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: _itemLabels.length,
+              itemBuilder: (context, i) => NavItem(
+                index: i,
+                icon: _itemIcons[i],
+                label: _itemLabels[i],
+                color: _itemColors[i],
+                isSelected: i == selectedIndex,
+              ),
+            ),
+          ),
+        ],
       ),
-    );
+    ).animate().slideX(begin: -1, duration: 500.ms, curve: Curves.easeOutCubic);
   }
 }

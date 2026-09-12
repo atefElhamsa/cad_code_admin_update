@@ -9,7 +9,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class GoogleDriveService {
-  static const _scopes = [drive.DriveApi.driveFileScope];
+  static const _scopes = [
+    drive.DriveApi.driveFileScope,
+    drive.DriveApi.driveScope,
+  ];
   static const _credentialsKey = 'google_drive_credentials';
 
   static const String _defaultFolderId = '1I9nkwCKp9JNPgBS9cyF3JfwR34RYZPEl';
@@ -70,20 +73,115 @@ class GoogleDriveService {
     }
   }
 
+  Future<String> getOrCreateFolder(
+    String folderName, {
+    String? parentFolderId,
+  }) async {
+    final client = await _getAuthClient();
+    final driveApi = drive.DriveApi(client);
+
+    final parent = parentFolderId ?? _defaultFolderId;
+
+    // Search for existing folder with exact name under the parent
+    final query =
+        "mimeType='application/vnd.google-apps.folder' "
+        "and name='${folderName.replaceAll("'", "\\'")}'  "
+        "and '$parent' in parents "
+        "and trashed=false";
+
+    final result = await driveApi.files.list(
+      q: query,
+      $fields: 'files(id, name)',
+      spaces: 'drive',
+    );
+
+    if (result.files != null && result.files!.isNotEmpty) {
+      // Folder already exists — reuse it
+      return result.files!.first.id!;
+    }
+
+    // Folder not found — create it
+    final newFolder = drive.File()
+      ..name = folderName
+      ..mimeType = 'application/vnd.google-apps.folder'
+      ..parents = [parent];
+
+    final created = await driveApi.files.create(newFolder, $fields: 'id');
+
+    // Make it readable by anyone with the link
+    final permission = drive.Permission()
+      ..type = 'anyone'
+      ..role = 'reader';
+    await driveApi.permissions.create(permission, created.id!);
+
+    return created.id!;
+  }
+
   Future<void> deleteFile(String fileId) async {
     try {
       final client = await _getAuthClient();
       final driveApi = drive.DriveApi(client);
       await driveApi.files.delete(fileId);
     } catch (e) {
-      print('Drive delete error: $e');
+      print('Drive delete error: \$e');
       rethrow;
     }
   }
 
+  static String extractFileId(String url) {
+    if (url.contains('/file/d/')) {
+      final parts = url.split('/file/d/');
+      if (parts.length > 1) {
+        return parts[1].split('/')[0];
+      }
+    }
+    if (url.contains('/folders/')) {
+      final parts = url.split('/folders/');
+      if (parts.length > 1) {
+        return parts[1].split('?')[0].split('/')[0];
+      }
+    }
+    final uri = Uri.tryParse(url);
+    if (uri != null && uri.queryParameters.containsKey('id')) {
+      return uri.queryParameters['id']!;
+    }
+    return '';
+  }
+
+  Future<String?> findFolderId(String folderName, {String? parentFolderId}) async {
+    try {
+      final client = await _getAuthClient();
+      final driveApi = drive.DriveApi(client);
+      final parent = parentFolderId ?? _defaultFolderId;
+      final query =
+          "mimeType='application/vnd.google-apps.folder' "
+          "and name='${folderName.replaceAll("'", "\\'")}' "
+          "and '$parent' in parents "
+          "and trashed=false";
+
+      final result = await driveApi.files.list(
+        q: query,
+        $fields: 'files(id, name)',
+        spaces: 'drive',
+      );
+
+      if (result.files != null && result.files!.isNotEmpty) {
+        return result.files!.first.id;
+      }
+    } catch (e) {
+      print('Drive findFolderId error: \$e');
+    }
+    return null;
+  }
+
+  Future<void> deleteFolderByName(String folderName, {String? parentFolderId}) async {
+    final folderId = await findFolderId(folderName, parentFolderId: parentFolderId);
+    if (folderId != null) {
+      await deleteFile(folderId);
+    }
+  }
+
   Future<AuthClient> _getAuthClient() async {
-    // Load client_secret.json from the directory next to the executable.
-    // In CI/installer builds the file is placed there alongside the .exe.
     final exeDir = File(Platform.resolvedExecutable).parent.path;
     final secretFile = File('$exeDir/client_secret.json');
     if (!secretFile.existsSync()) {

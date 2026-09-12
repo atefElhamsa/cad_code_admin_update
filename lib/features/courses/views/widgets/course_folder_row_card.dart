@@ -10,8 +10,13 @@ import 'access_code_widget.dart';
 
 class CourseFolderRowCard extends StatefulWidget {
   final CourseFolderModel folder;
+  final String courseName;
 
-  const CourseFolderRowCard({super.key, required this.folder});
+  const CourseFolderRowCard({
+    super.key,
+    required this.folder,
+    required this.courseName,
+  });
 
   @override
   State<CourseFolderRowCard> createState() => _CourseFolderRowCardState();
@@ -29,7 +34,10 @@ class _CourseFolderRowCardState extends State<CourseFolderRowCard> {
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => FolderWorkspaceView(folder: widget.folder),
+              builder: (_) => FolderWorkspaceView(
+                folder: widget.folder,
+                courseName: widget.courseName,
+              ),
             ),
           );
         },

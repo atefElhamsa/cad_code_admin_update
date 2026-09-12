@@ -9,7 +9,8 @@ import '../../../../core/theme/app_theme.dart';
 import 'course_folder_row_card.dart';
 
 class CourseFoldersTable extends StatelessWidget {
-  const CourseFoldersTable({super.key});
+  final String courseName;
+  const CourseFoldersTable({super.key, required this.courseName});
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +117,10 @@ class CourseFoldersTable extends StatelessWidget {
             separatorBuilder: (context, index) =>
                 const Divider(height: 1, color: AppTheme.borderLight),
             itemBuilder: (context, index) {
-              return CourseFolderRowCard(folder: folders[index]);
+              return CourseFolderRowCard(
+                folder: folders[index],
+                courseName: courseName,
+              );
             },
           ),
         ),

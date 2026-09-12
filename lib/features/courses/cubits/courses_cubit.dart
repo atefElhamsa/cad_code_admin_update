@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:path/path.dart' as p;
 
+import '../../../../core/services/google_drive_service.dart';
 import '../models/course_model.dart';
 import 'courses_state.dart';
 
@@ -57,12 +58,31 @@ class CoursesCubit extends Cubit<CoursesState> {
   Future<void> deleteCourse(CourseModel course) async {
     emit(CoursesLoading());
     try {
-      // 1. Fetch and delete folder images
-      final response = await _supabase
+      final driveService = GoogleDriveService();
+
+      // 1. Delete course folder and all subfolders/files from Google Drive
+      try {
+        await driveService.deleteFolderByName(course.title);
+      } catch (e) {
+        print('Error deleting course folder from Drive: $e');
+      }
+
+      // 2. Fetch all course_folders to clean up Supabase storage and records
+      final foldersResponse = await _supabase
           .from('course_folders')
-          .select('image_url')
+          .select('id, image_url')
           .eq('course_id', course.id);
-      final foldersData = response as List;
+      final foldersData = foldersResponse as List;
+
+      final folderIds = foldersData.map((f) => f['id'] as int).toList();
+
+      if (folderIds.isNotEmpty) {
+        // Delete session/file/task records from Supabase
+        try { await _supabase.from('sessions').delete().inFilter('folder_id', folderIds); } catch (_) {}
+        try { await _supabase.from('course_files').delete().inFilter('folder_id', folderIds); } catch (_) {}
+        try { await _supabase.from('tasks').delete().inFilter('folder_id', folderIds); } catch (_) {}
+      }
+
       for (var folderData in foldersData) {
         final imgUrl = folderData['image_url'] as String?;
         if (imgUrl != null && imgUrl.isNotEmpty) {
@@ -72,13 +92,17 @@ class CoursesCubit extends Cubit<CoursesState> {
             final bucketIndex = pathSegments.indexOf('course_folders');
             if (bucketIndex != -1 && bucketIndex < pathSegments.length - 1) {
               final fileName = pathSegments.sublist(bucketIndex + 1).join('/');
-              await _supabase.storage.from('course_folders').remove([fileName]);
+              try {
+                await _supabase.storage.from('course_folders').remove([fileName]);
+              } catch (_) {}
             }
           }
         }
       }
 
-      // 2. Delete course image
+      await _supabase.from('course_folders').delete().eq('course_id', course.id);
+
+      // 3. Delete course image from Supabase storage
       if (course.imageUrl.isNotEmpty) {
         final uri = Uri.tryParse(course.imageUrl);
         if (uri != null) {
@@ -86,12 +110,14 @@ class CoursesCubit extends Cubit<CoursesState> {
           final bucketIndex = pathSegments.indexOf('courses');
           if (bucketIndex != -1 && bucketIndex < pathSegments.length - 1) {
             final fileName = pathSegments.sublist(bucketIndex + 1).join('/');
-            await _supabase.storage.from('courses').remove([fileName]);
+            try {
+              await _supabase.storage.from('courses').remove([fileName]);
+            } catch (_) {}
           }
         }
       }
 
-      // 3. Delete course row (cascade should delete folder rows)
+      // 4. Delete course row from Supabase
       await _supabase.from('courses').delete().eq('id', course.id);
 
       emit(CourseActionSuccess('Course deleted successfully'));

@@ -7,7 +7,6 @@ import '../../users/views/users_view.dart';
 import '../../courses/views/courses_view.dart';
 import '../widgets/dashboard_sidebar.dart';
 import '../widgets/dashboard_header.dart';
-import '../widgets/dashboard_overview.dart';
 import '../widgets/placeholder_screen.dart';
 import '../../updater/services/updater_service.dart';
 
@@ -72,16 +71,16 @@ class _DashboardContentState extends State<DashboardContent> {
 
   Widget _buildMainContent(DashboardState state) {
     switch (state.selectedIndex) {
+      // case 0:
+      // return DashboardOverview(state: state);
       case 0:
-        return DashboardOverview(state: state);
-      case 1:
         return const UsersView();
-      case 2:
+      case 1:
         return const CoursesView();
-      case 3:
+      case 2:
         return const PlaceholderScreen(title: 'Settings');
       default:
-        return DashboardOverview(state: state);
+        return const UsersView();
     }
   }
 }

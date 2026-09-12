@@ -25,6 +25,7 @@ class _FolderTasksContent extends StatelessWidget {
 
   const _FolderTasksContent({required this.folder});
 
+  // ignore: unused_element
   void _showUploadDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -58,22 +59,19 @@ class _FolderTasksContent extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.refresh, color: AppTheme.textGray),
-                  tooltip: 'Refresh',
+                OutlinedButton.icon(
                   onPressed: () => context.read<TasksCubit>().fetchTasks(),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: () => _showUploadDialog(context),
-                  icon: const Icon(Icons.upload_file),
-                  label: const Text('Upload Task'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryAccent,
-                    foregroundColor: Colors.white,
+                  icon: const Icon(Icons.refresh, size: 16),
+                  label: const Text('Refresh'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.textGray,
+                    side: BorderSide(color: Colors.grey.shade300),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 16,
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                 ),

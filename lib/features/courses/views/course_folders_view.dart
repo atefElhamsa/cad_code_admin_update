@@ -70,7 +70,7 @@ class _CourseFoldersContent extends StatelessWidget {
             children: [
               CourseFoldersHeader(course: course),
               const SizedBox(height: 32),
-              const Expanded(child: CourseFoldersTable()),
+              Expanded(child: CourseFoldersTable(courseName: course.title)),
             ],
           ),
         ),

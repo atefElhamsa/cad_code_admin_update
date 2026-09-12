@@ -47,6 +47,8 @@ app.*.map.json
 # Widget Preview related
 .widget_preview/
 
-# Secret credentials â€” never commit these
+
+
+# Secret credentials — never commit these
 assets/credentials.json
 assets/client_secret.json
