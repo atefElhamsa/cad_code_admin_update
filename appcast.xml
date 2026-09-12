@@ -3,11 +3,11 @@
     <channel>
         <title>C&C Academy Admin</title>
         <item>
-            <title>Version 1.0.10</title>
+            <title>Version 1.0.11</title>
             <description>New update is available.</description>
-            <pubDate>Thu, 10 Sep 2026 05:00:22 GMT</pubDate>
-            <enclosure url="https://github.com/atefElhamsa/cad_code_admin_update/releases/download/v1.0.10/cad_code_admin_setup.exe"
-                       sparkle:version="1.0.10"
+            <pubDate>Sat, 12 Sep 2026 00:28:29 GMT</pubDate>
+            <enclosure url="https://github.com/atefElhamsa/cad_code_admin_update/releases/download/v1.0.11/cad_code_admin_setup.exe"
+                       sparkle:version="1.0.11"
                        sparkle:os="windows"
                        type="application/octet-stream" />
         </item>
