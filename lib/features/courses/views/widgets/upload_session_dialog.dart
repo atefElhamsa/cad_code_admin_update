@@ -162,6 +162,13 @@ class _UploadSessionDialogState extends State<UploadSessionDialog>
         content: Text(msg),
         backgroundColor: isError ? Colors.red : Colors.green,
         behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.only(
+          bottom: MediaQuery.of(context).size.height - 150 > 0 
+              ? MediaQuery.of(context).size.height - 150 
+              : 0,
+          left: 20,
+          right: 20,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
